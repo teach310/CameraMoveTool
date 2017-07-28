@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.Events;
+using UnityEditor.Timeline;
+using UnityEditorInternal;
+using Cinemachine;
 
 namespace CameraMove
 {
@@ -18,7 +21,7 @@ namespace CameraMove
     public class CameraMoveWindow : EditorWindow
     {
         [SerializeField]
-        protected GameObject go;
+        protected GameObject go; // Camera, または　VirtualCamera
         protected GameObject focusObj;
         // 選択した位置からのOffset
         protected Vector3 focusPos = Vector3.zero;
@@ -61,11 +64,15 @@ namespace CameraMove
         {
             if (go == null && lockSelection)
                 lockSelection = false;
-
+            var obj = Selection.activeGameObject;
 
             if (!lockSelection)
             {
-                go = Selection.activeGameObject;
+                if(obj != null){
+                    if ((obj.GetComponent<Camera>() || obj.GetComponent<CinemachineVirtualCameraBase>()) && go != obj)
+                        go = obj;
+                }
+                
                 Repaint();
             }
         }
@@ -124,11 +131,9 @@ namespace CameraMove
 
         void OnGUI()
         {
-
             EditorGUILayout.LabelField("カメラを動かすツール");
-
             // Wait for user to select a GameObject
-            if (go == null || !go.GetComponent<Camera>())
+            if (go == null)
             {
                 EditorGUILayout.HelpBox("Please select a Camera", MessageType.Info);
                 return;
